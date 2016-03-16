@@ -31,7 +31,6 @@ import static software.betamax.MatchRules.*
 import static software.betamax.TapeMode.READ_ONLY
 import static software.betamax.TapeMode.WRITE_ONLY
 
-@Unroll
 @Stepwise
 @IgnoreIf({
     def url = "http://httpbin.org/".toURL()
@@ -92,38 +91,58 @@ class BasicAuthSpec extends Specification {
     }
 
     @Betamax(tape = "basic auth", mode = WRITE_ONLY, match = [method, uri, authorization])
-    void "can record #status response from authenticated endpoint"() {
+    void "can record 200 response from authenticated endpoint"() {
         when:
         connection.setRequestProperty("Authorization", "Basic $credentials");
         connection.connect()
 
         then:
-        connection.responseCode == status
+        connection.responseCode == HTTP_OK
         connection.getHeaderField(X_BETAMAX) == "REC"
 
         where:
-        password    | status
-        "passwd"    | HTTP_OK
-        "INCORRECT" | HTTP_UNAUTHORIZED
-
-        credentials = BaseEncoding.base64().encode("user:$password".bytes)
+        credentials = BaseEncoding.base64().encode("user:passwd".bytes)
     }
 
-    @Betamax(tape = "basic auth", mode = READ_ONLY, match = [method, uri, authorization])
-    void "can play back #status response from authenticated endpoint"() {
+    @Betamax(tape = "basic auth", mode = WRITE_ONLY, match = [method, uri, authorization])
+    void "can record 401 response from authenticated endpoint"() {
         when:
         connection.setRequestProperty("Authorization", "Basic $credentials");
         connection.connect()
 
         then:
-        connection.responseCode == status
+        connection.responseCode == HTTP_UNAUTHORIZED
+        connection.getHeaderField(X_BETAMAX) == "REC"
+
+        where:
+        credentials = BaseEncoding.base64().encode("user:INCORRECT".bytes)
+    }
+
+    @Betamax(tape = "basic auth", mode = READ_ONLY, match = [method, uri, authorization])
+    void "can play back 200 response from authenticated endpoint"() {
+        when:
+        connection.setRequestProperty("Authorization", "Basic $credentials");
+        connection.connect()
+
+        then:
+        connection.responseCode == HTTP_OK
         connection.getHeaderField(X_BETAMAX) == "PLAY"
 
         where:
-        password    | status
-        "passwd"    | HTTP_OK
-        "INCORRECT" | HTTP_UNAUTHORIZED
+        credentials = BaseEncoding.base64().encode("user:passwd".bytes)
+    }
 
-        credentials = BaseEncoding.base64().encode("user:$password".bytes)
+    @Betamax(tape = "basic auth", mode = READ_ONLY, match = [method, uri, authorization])
+    void "can play back 401 response from authenticated endpoint"() {
+        when:
+        connection.setRequestProperty("Authorization", "Basic $credentials");
+        connection.connect()
+
+        then:
+        connection.responseCode == HTTP_UNAUTHORIZED
+        connection.getHeaderField(X_BETAMAX) == "PLAY"
+
+        where:
+        credentials = BaseEncoding.base64().encode("user:INCORRECT".bytes)
     }
 }
