@@ -39,11 +39,11 @@ import static org.yaml.snakeyaml.DumperOptions.FlowStyle.BLOCK;
 
 public class YamlTapeLoader implements TapeLoader<YamlTape> {
 
+    private static final Logger LOG = Logger.getLogger(YamlTapeLoader.class.getName());
+
     public static final String FILE_CHARSET = "UTF-8";
 
     private final FileResolver fileResolver;
-
-    private static final Logger LOG = Logger.getLogger(YamlTapeLoader.class.getName());
 
     public YamlTapeLoader(File tapeRoot) {
         fileResolver = new FileResolver(tapeRoot);
@@ -70,6 +70,7 @@ public class YamlTapeLoader implements TapeLoader<YamlTape> {
     public void writeTape(final Tape tape) {
         File file = fileFor(tape.getName());
         file.getParentFile().mkdirs();
+        LOG.info("checking if tape is dirty, want to write to file " + file.getAbsolutePath());
         if (tape.isDirty()) {
             try {
                 BufferedWriter bufferedWriter = Files.newWriter(file, Charset.forName(FILE_CHARSET));
@@ -78,6 +79,8 @@ public class YamlTapeLoader implements TapeLoader<YamlTape> {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        } else {
+            LOG.info("tape is not dirty");
         }
     }
 

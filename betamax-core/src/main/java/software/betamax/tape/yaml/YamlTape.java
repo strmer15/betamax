@@ -16,13 +16,17 @@
 
 package software.betamax.tape.yaml;
 
+import org.yaml.snakeyaml.nodes.Tag;
 import software.betamax.io.FileResolver;
 import software.betamax.message.Request;
 import software.betamax.message.Response;
 import software.betamax.tape.MemoryTape;
-import org.yaml.snakeyaml.nodes.Tag;
+
+import java.util.logging.Logger;
 
 class YamlTape extends MemoryTape {
+
+    private static final Logger LOG = Logger.getLogger(YamlTape.class.getName());
 
     public static final Tag TAPE_TAG = new Tag("!tape");
     public static final Tag FILE_TAG = new Tag("!file");
@@ -41,7 +45,7 @@ class YamlTape extends MemoryTape {
     @Override
     public void record(Request request, Response response) {
         super.record(request, response);
+        LOG.info("Setting the YamlTape to dirty");
         dirty = true;
     }
-
 }
