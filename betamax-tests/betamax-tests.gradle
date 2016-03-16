@@ -18,6 +18,7 @@ dependencies {
     testCompile commonDependencies.httpClient
     testCompile commonDependencies.httpBuilder
 
+    testCompile commonDependencies.slf4j
     testRuntime commonDependencies.cglib
 
     testCompile("commons-httpclient:commons-httpclient:3.1") {
