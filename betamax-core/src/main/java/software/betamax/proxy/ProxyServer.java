@@ -90,6 +90,8 @@ public class ProxyServer implements RecorderListener, TapeProvider {
             throw new IllegalStateException("Betamax proxy server is already running");
         }
 
+        LOG.info("starting the server");
+
         proxyServer = createProxyBootstrap().start();
         running = true;
 
@@ -101,6 +103,8 @@ public class ProxyServer implements RecorderListener, TapeProvider {
         if (!isRunning()) {
             throw new IllegalStateException("Betamax proxy server is already stopped");
         }
+
+        LOG.info("stopping the server");
 
         restoreOriginalProxySettings();
         restoreOriginalSSLSettings();

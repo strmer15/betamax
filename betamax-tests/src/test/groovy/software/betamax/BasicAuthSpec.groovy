@@ -62,21 +62,25 @@ class BasicAuthSpec extends Specification {
     RecorderRule recorder = new RecorderRule(configuration)
 
     @Betamax(tape = "basic auth", mode = WRITE_ONLY, match = [method, uri, authorization])
-    void "can record #status response from authenticated endpoint"() {
+    void "can record 200 response from authenticated endpoint"() {
         when:
         HttpURLConnection connection = endpoint.openConnection() as HttpURLConnection
-        connection.setRequestProperty("Authorization", "Basic $credentials");
+        connection.setRequestProperty("Authorization", "Basic " + BaseEncoding.base64().encode("user:passwd".bytes))
 
         then:
-        connection.responseCode == status
+        connection.responseCode == HTTP_OK
         connection.getHeaderField(X_BETAMAX) == "REC"
+    }
 
-        where:
-        password    | status
-        "passwd"    | HTTP_OK
-        "INCORRECT" | HTTP_UNAUTHORIZED
+    @Betamax(tape = "basic auth", mode = WRITE_ONLY, match = [method, uri, authorization])
+    void "can record 401 response from authenticated endpoint"() {
+        when:
+        HttpURLConnection connection = endpoint.openConnection() as HttpURLConnection
+        connection.setRequestProperty("Authorization", "Basic " + BaseEncoding.base64().encode("user:INCORRECT".bytes))
 
-        credentials = BaseEncoding.base64().encode("user:$password".bytes)
+        then:
+        connection.responseCode == HTTP_UNAUTHORIZED
+        connection.getHeaderField(X_BETAMAX) == "REC"
     }
 
     @Betamax(tape = "basic auth", mode = READ_ONLY, match = [method, uri, authorization])

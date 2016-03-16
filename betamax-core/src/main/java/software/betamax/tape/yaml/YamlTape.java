@@ -44,6 +44,7 @@ class YamlTape extends MemoryTape {
 
     @Override
     public void record(Request request, Response response) {
+        LOG.info("Recording the YamlTape");
         super.record(request, response);
         LOG.info("Setting the YamlTape to dirty");
         dirty = true;

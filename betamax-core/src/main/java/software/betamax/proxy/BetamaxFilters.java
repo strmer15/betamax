@@ -77,10 +77,14 @@ public class BetamaxFilters extends HttpFiltersAdapter {
             }
 
             // If it's the last one, we want to take further steps, like checking to see if we've recorded on it!
+            LOG.info("checking for last chunk");
             if (ProxyUtils.isLastChunk(httpObject)) {
+                LOG.info("IS the last chunk");
                 // We will have collected the last of the http Request finally
                 // And now we're ready to intercept it and do proxy-type-things
                 response = onRequestIntercepted().orNull();
+            } else {
+                LOG.info("NOT the last chunk");
             }
 
             if (response != null) {
