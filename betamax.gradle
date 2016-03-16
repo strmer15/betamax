@@ -38,8 +38,7 @@ allprojects {
                 exclude module: "groovy-all"
                 exclude module: "junit"
             }),
-            tika: dependencies.create("org.apache.tika:tika-core:1.11"),
-            slf4j: dependencies.create("org.slf4j:slf4j-jdk14:1.7.12")
+            tika: dependencies.create("org.apache.tika:tika-core:1.11")
         ]
     }
 }
