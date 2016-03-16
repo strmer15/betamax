@@ -22,6 +22,8 @@ import software.betamax.message.Request;
 import software.betamax.message.Response;
 import software.betamax.tape.MemoryTape;
 
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Logger;
 
 class YamlTape extends MemoryTape {
@@ -31,7 +33,8 @@ class YamlTape extends MemoryTape {
     public static final Tag TAPE_TAG = new Tag("!tape");
     public static final Tag FILE_TAG = new Tag("!file");
 
-    private transient boolean dirty;
+    private transient volatile boolean dirty;
+    private transient ReadWriteLock dirtyLock = new ReentrantReadWriteLock();
 
     YamlTape(FileResolver fileResolver) {
         super(fileResolver);
@@ -39,14 +42,24 @@ class YamlTape extends MemoryTape {
 
     @Override
     public boolean isDirty() {
-        return dirty;
+        dirtyLock.readLock().lock();
+        try {
+            return dirty;
+        } finally {
+            dirtyLock.readLock().unlock();
+        }
     }
 
     @Override
     public void record(Request request, Response response) {
-        LOG.info("Recording the YamlTape");
-        super.record(request, response);
-        LOG.info("Setting the YamlTape to dirty");
-        dirty = true;
+        dirtyLock.writeLock().lock();
+        try {
+            LOG.info("Recording the YamlTape");
+            super.record(request, response);
+            LOG.info("Setting the YamlTape to dirty");
+            dirty = true;
+        } finally {
+            dirtyLock.writeLock().unlock();
+        }
     }
 }
