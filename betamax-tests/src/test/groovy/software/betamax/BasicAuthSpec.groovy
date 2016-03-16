@@ -56,7 +56,6 @@ class BasicAuthSpec extends Specification {
     private endpoint = "http://httpbin.org/basic-auth/user/passwd".toURL()
 
     @Shared
-    @AutoCleanup("deleteDir")
     def tapeRoot = Files.createTempDir()
 
     @Shared
