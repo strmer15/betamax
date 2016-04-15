@@ -36,7 +36,7 @@ class YamlTape extends MemoryTape {
     private transient volatile boolean dirty;
     private transient ReadWriteLock dirtyLock = new ReentrantReadWriteLock();
 
-    YamlTape(FileResolver fileResolver) {
+    YamlTape(final FileResolver fileResolver) {
         super(fileResolver);
     }
 
@@ -51,7 +51,7 @@ class YamlTape extends MemoryTape {
     }
 
     @Override
-    public void record(Request request, Response response) {
+    public void record(final Request request, final Response response) {
         dirtyLock.writeLock().lock();
         try {
             LOG.info("Recording the YamlTape");

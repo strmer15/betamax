@@ -35,7 +35,6 @@ import static software.betamax.TapeMode.WRITE_ONLY
 @Stepwise
 @IgnoreIf({
     def url = "http://httpbin.org/".toURL()
-
     try {
         HttpURLConnection connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "HEAD"
@@ -43,34 +42,17 @@ import static software.betamax.TapeMode.WRITE_ONLY
         connection.connect()
         return connection.responseCode >= 400
     } catch (IOException e) {
-        System.err.println "Skipping spec as $url is not available: " + e.message
+        System.err.println "Skipping spec as $url is not available: $e.message"
         return true
     }
 })
 class BasicAuthSpec extends Specification {
 
-    @Shared
-    private endpoint = "http://httpbin.org/basic-auth/user/passwd".toURL()
+    @Shared private endpoint = "http://httpbin.org/basic-auth/user/passwd".toURL()
 
-    @Shared
-    def tapeRoot = Files.createTempDir()
-
-    @Shared
-    def configuration = ProxyConfiguration.builder().tapeRoot(tapeRoot).build()
-
-    @Rule
-    RecorderRule recorder = new RecorderRule(configuration)
-
-    @Betamax(tape = "basic auth", mode = WRITE_ONLY, match = [method, uri, authorization])
-    void "can record 200 response from authenticated endpoint"() {
-        when:
-        HttpURLConnection connection = endpoint.openConnection() as HttpURLConnection
-        connection.setRequestProperty("Authorization", "Basic " + BaseEncoding.base64().encode("user:passwd".bytes))
-
-        then:
-        connection.responseCode == HTTP_OK
-        connection.getHeaderField(X_BETAMAX) == "REC"
-    }
+    @Shared @AutoCleanup("deleteDir") def tapeRoot = Files.createTempDir()
+    @Shared def configuration = ProxyConfiguration.builder().tapeRoot(tapeRoot).build()
+    @Rule RecorderRule recorder = new RecorderRule(configuration)
 
     @Betamax(tape = "basic auth", mode = WRITE_ONLY, match = [method, uri, authorization])
     void "can record 401 response from authenticated endpoint"() {
