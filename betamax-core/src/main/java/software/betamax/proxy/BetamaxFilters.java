@@ -16,6 +16,14 @@
 
 package software.betamax.proxy;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.*;
+import org.littleshoot.proxy.HttpFiltersAdapter;
+import org.littleshoot.proxy.impl.ProxyUtils;
+import software.betamax.Headers;
 import software.betamax.encoding.DeflateEncoder;
 import software.betamax.encoding.GzipEncoder;
 import software.betamax.handler.NonWritableTapeException;
@@ -23,13 +31,6 @@ import software.betamax.message.Response;
 import software.betamax.proxy.netty.NettyRequestAdapter;
 import software.betamax.proxy.netty.NettyResponseAdapter;
 import software.betamax.tape.Tape;
-import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.*;
-import org.littleshoot.proxy.HttpFiltersAdapter;
-import org.littleshoot.proxy.impl.ProxyUtils;
-import software.betamax.Headers;
 
 import java.io.IOException;
 import java.util.Map;
@@ -55,6 +56,12 @@ public class BetamaxFilters extends HttpFiltersAdapter {
 
         request = NettyRequestAdapter.wrap(originalRequest);
         this.tapeProvider = tapeProvider;
+    }
+
+    @Override
+    public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
+        tapeProvider.registerServerChannel(serverCtx.channel());
+        super.proxyToServerConnectionSucceeded(serverCtx);
     }
 
     @Override

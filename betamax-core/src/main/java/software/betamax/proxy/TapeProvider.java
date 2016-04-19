@@ -16,6 +16,7 @@
 
 package software.betamax.proxy;
 
+import io.netty.channel.Channel;
 import software.betamax.tape.Tape;
 
 /**
@@ -24,4 +25,6 @@ import software.betamax.tape.Tape;
 public interface TapeProvider {
 
     Tape getTape();
+
+    void registerServerChannel(final Channel channel);
 }

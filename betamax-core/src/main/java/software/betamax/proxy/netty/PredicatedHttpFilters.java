@@ -17,6 +17,7 @@
 package software.betamax.proxy.netty;
 
 import com.google.common.base.Predicate;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
@@ -78,5 +79,10 @@ public class PredicatedHttpFilters extends HttpFiltersAdapter {
         } else {
             return httpObject;
         }
+    }
+
+    @Override
+    public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
+        delegate.proxyToServerConnectionSucceeded(serverCtx);
     }
 }

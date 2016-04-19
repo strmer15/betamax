@@ -56,12 +56,14 @@ public class ProxyServer implements RecorderListener, TapeProvider {
     private HttpProxyServer proxyServer;
     private boolean running;
 
-    private Set<Channel> channels;
+    private Set<Channel> clientChannels;
+    private Set<Channel> serverChannels;
     private Tape currentTape;
 
     public ProxyServer(final ProxyConfiguration configuration) {
         this.configuration = configuration;
-        this.channels = Sets.newHashSet();
+        this.clientChannels = Sets.newHashSet();
+        this.serverChannels = Sets.newHashSet();
     }
 
     @Override
@@ -77,6 +79,17 @@ public class ProxyServer implements RecorderListener, TapeProvider {
     @Override
     public Tape getTape() {
         return currentTape;
+    }
+
+    public void registerClientChannel(final Channel channel) {
+        LOG.info("registering client channel");
+        clientChannels.add(channel);
+    }
+
+    @Override
+    public void registerServerChannel(final Channel channel) {
+        LOG.info("registering server channel");
+        serverChannels.add(channel);
     }
 
     public boolean isRunning() {
@@ -131,16 +144,24 @@ public class ProxyServer implements RecorderListener, TapeProvider {
         if (configuration.isCreateProxyOnStartup()) {
             stopServer();
 
-        } else if (channels != null && !channels.isEmpty()) {
+        } else {
 
             // close the open channels to ensure that the tape is written to memory
-            for (Channel channel : channels) {
-                if (channel.isOpen()) {
-                    LOG.info("closing channel");
-                    channel.close();
-                }
+            closeChannels(serverChannels);
+            closeChannels(clientChannels);
+        }
+    }
+
+    private void closeChannels(final Set<Channel> channels) {
+
+        for (Channel channel : channels) {
+            if (channel.isOpen()) {
+                LOG.info("closing channel");
+                channel.close();
             }
         }
+
+        channels.clear();
     }
 
     private void overrideProxySettings() {
@@ -215,8 +236,7 @@ public class ProxyServer implements RecorderListener, TapeProvider {
 
             @Override
             public HttpFilters filterRequest(final HttpRequest originalRequest, final ChannelHandlerContext ctx) {
-                LOG.info("filtering channel");
-                channels.add(ctx.channel());
+                registerClientChannel(ctx.channel());
                 return super.filterRequest(originalRequest, ctx);
             }
         });
