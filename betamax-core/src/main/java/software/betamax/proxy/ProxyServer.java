@@ -136,6 +136,7 @@ public class ProxyServer implements RecorderListener, TapeProvider {
             // close the open channels to ensure that the tape is written to memory
             for (Channel channel : channels) {
                 if (channel.isOpen()) {
+                    LOG.info("closing channel");
                     channel.close();
                 }
             }
@@ -214,6 +215,7 @@ public class ProxyServer implements RecorderListener, TapeProvider {
 
             @Override
             public HttpFilters filterRequest(final HttpRequest originalRequest, final ChannelHandlerContext ctx) {
+                LOG.info("filtering channel");
                 channels.add(ctx.channel());
                 return super.filterRequest(originalRequest, ctx);
             }
