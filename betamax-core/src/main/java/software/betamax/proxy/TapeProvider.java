@@ -26,5 +26,5 @@ public interface TapeProvider {
 
     Tape getTape();
 
-    void registerServerChannel(final Channel channel);
+    void registerChannel(final Channel channel);
 }

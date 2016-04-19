@@ -18,10 +18,12 @@ package software.betamax.proxy;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Sets;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import software.betamax.ProxyConfiguration;
@@ -34,7 +36,6 @@ import software.betamax.util.SSLOverrider;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,14 +57,12 @@ public class ProxyServer implements RecorderListener, TapeProvider {
     private HttpProxyServer proxyServer;
     private boolean running;
 
-    private Set<Channel> clientChannels;
-    private Set<Channel> serverChannels;
+    private ChannelGroup channels;
     private Tape currentTape;
 
     public ProxyServer(final ProxyConfiguration configuration) {
         this.configuration = configuration;
-        this.clientChannels = Sets.newHashSet();
-        this.serverChannels = Sets.newHashSet();
+        this.channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     }
 
     @Override
@@ -81,15 +80,10 @@ public class ProxyServer implements RecorderListener, TapeProvider {
         return currentTape;
     }
 
-    public void registerClientChannel(final Channel channel) {
-        LOG.info("registering client channel");
-        clientChannels.add(channel);
-    }
-
     @Override
-    public void registerServerChannel(final Channel channel) {
-        LOG.info("registering server channel");
-        serverChannels.add(channel);
+    public void registerChannel(final Channel channel) {
+        LOG.info("registering channel");
+        channels.add(channel);
     }
 
     public boolean isRunning() {
@@ -145,23 +139,11 @@ public class ProxyServer implements RecorderListener, TapeProvider {
             stopServer();
 
         } else {
-
             // close the open channels to ensure that the tape is written to memory
-            closeChannels(serverChannels);
-            closeChannels(clientChannels);
+            LOG.info("closing channels");
+            channels.close().awaitUninterruptibly();
+            LOG.info("done closing channels");
         }
-    }
-
-    private void closeChannels(final Set<Channel> channels) {
-
-        for (Channel channel : channels) {
-            if (channel.isOpen()) {
-                LOG.info("closing channel");
-                channel.close();
-            }
-        }
-
-        channels.clear();
     }
 
     private void overrideProxySettings() {
@@ -236,7 +218,7 @@ public class ProxyServer implements RecorderListener, TapeProvider {
 
             @Override
             public HttpFilters filterRequest(final HttpRequest originalRequest, final ChannelHandlerContext ctx) {
-                registerClientChannel(ctx.channel());
+                registerChannel(ctx.channel());
                 return super.filterRequest(originalRequest, ctx);
             }
         });

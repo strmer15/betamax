@@ -60,7 +60,7 @@ public class BetamaxFilters extends HttpFiltersAdapter {
 
     @Override
     public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
-        tapeProvider.registerServerChannel(serverCtx.channel());
+        tapeProvider.registerChannel(serverCtx.channel());
         super.proxyToServerConnectionSucceeded(serverCtx);
     }
 
